@@ -48,13 +48,50 @@ export function ChatProvider({ children }) {
       }
       return {
         ...prevHistory,
-        [msg.roomId]: [...historyForRoom, msg],
+        [msg.roomId]: [...historyForRoom, { ...msg, reactions: {} }],
+      };
+    });
+  }, [setRoomMessages]);
+
+  // Handler for incoming reactions
+  const handleIncomingReaction = useCallback((reaction) => {
+    setRoomMessages((prevHistory) => {
+      const historyForRoom = prevHistory[reaction.roomId] || [];
+      const updatedHistory = historyForRoom.map((msg) => {
+        if (msg.id === reaction.messageId) {
+          const currentReactions = msg.reactions || {};
+          const usersForEmoji = currentReactions[reaction.emoji] || [];
+          
+          let newUsers;
+          if (usersForEmoji.includes(reaction.username)) {
+            // Toggle off
+            newUsers = usersForEmoji.filter((u) => u !== reaction.username);
+          } else {
+            // Toggle on
+            newUsers = [...usersForEmoji, reaction.username];
+          }
+
+          return {
+            ...msg,
+            reactions: {
+              ...currentReactions,
+              [reaction.emoji]: newUsers,
+            },
+          };
+        }
+        return msg;
+      });
+
+      return {
+        ...prevHistory,
+        [reaction.roomId]: updatedHistory,
       };
     });
   }, [setRoomMessages]);
 
   // Connect to PieSocket for the active room
   const {
+    channel,
     connectionStatus,
     onlineMembers,
     typingUsers,
@@ -64,6 +101,7 @@ export function ChatProvider({ children }) {
     profile,
     {
       onMessage: handleIncomingMessage,
+      onReaction: handleIncomingReaction,
     }
   );
 
@@ -81,6 +119,20 @@ export function ChatProvider({ children }) {
 
     publish('new_message', messagePayload);
   }, [profile, publish]);
+
+  // Send reaction action
+  const sendReaction = useCallback((messageId, emoji) => {
+    if (!profile) return;
+    const payload = {
+      messageId,
+      emoji,
+      username: profile.username,
+      roomId: activeRoomId,
+    };
+    publish('message_reaction', payload);
+    // Optimistic update
+    handleIncomingReaction(payload);
+  }, [profile, publish, activeRoomId, handleIncomingReaction]);
 
   // Send typing start notification
   const sendTypingStart = useCallback(() => {
@@ -135,6 +187,7 @@ export function ChatProvider({ children }) {
     changeRoom,
     messages: currentRoomMessages,
     sendMessage,
+    sendReaction,
     sendTypingStart,
     sendTypingStop,
     clearCurrentMessages,
@@ -142,6 +195,7 @@ export function ChatProvider({ children }) {
     typingUsers,
     connectionStatus,
     rooms: DEFAULT_ROOMS,
+    channel,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

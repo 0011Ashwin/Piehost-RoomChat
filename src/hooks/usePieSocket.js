@@ -33,7 +33,7 @@ const parseMember = (member) => {
  * @param {object} options - { onMessage }
  */
 export function usePieSocket(roomId, profile, options = {}) {
-  const { onMessage } = options;
+  const { onMessage, onReaction } = options;
 
   const [connectionStatus, setConnectionStatus] = useState('offline');
   const [onlineMembers, setOnlineMembers] = useState([]);
@@ -79,6 +79,11 @@ export function usePieSocket(roomId, profile, options = {}) {
   useEffect(() => {
     onMessageRef.current = onMessage;
   }, [onMessage]);
+
+  const onReactionRef = useRef(onReaction);
+  useEffect(() => {
+    onReactionRef.current = onReaction;
+  }, [onReaction]);
 
   const handleTypingEventRef = useRef(handleTypingEvent);
   useEffect(() => {
@@ -167,6 +172,13 @@ export function usePieSocket(roomId, profile, options = {}) {
           }
         });
 
+        /* ── Reaction events ─────────────────────────────────────── */
+        channel.listen('message_reaction', (data, meta) => {
+          if (onReactionRef.current) {
+            onReactionRef.current(data);
+          }
+        });
+
         /* ── Typing events ───────────────────────────────────────── */
         channel.listen('typing_start', (data, meta) => {
           if (handleTypingEventRef.current) {
@@ -222,6 +234,7 @@ export function usePieSocket(roomId, profile, options = {}) {
   }, [connectionStatus]);
 
   return {
+    channel: channelRef.current,
     connectionStatus,
     onlineMembers,
     typingUsers: Object.values(typingUsers),

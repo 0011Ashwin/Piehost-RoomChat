@@ -3,7 +3,8 @@ import { useChat } from '../../context/ChatContext';
 import MessageList from './MessageList';
 import TypingIndicator from './TypingIndicator';
 import ChatInput from './ChatInput';
-import { Menu, Search, X, Trash2, Hash } from 'lucide-react';
+import WhiteboardModal from './WhiteboardModal';
+import { Menu, Search, X, Trash2, Hash, Palette } from 'lucide-react';
 
 /**
  * Chat window container.
@@ -24,6 +25,7 @@ export default function ChatWindow({ onToggleSidebar }) {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [showWhiteboard, setShowWhiteboard] = useState(false);
 
   const handleSearchToggle = () => {
     if (showSearch) {
@@ -98,11 +100,20 @@ export default function ChatWindow({ onToggleSidebar }) {
             {showSearch ? <X className="w-5.5 h-5.5" /> : <Search className="w-5.5 h-5.5" />}
           </button>
 
+          {/* Whiteboard Toggle */}
+          <button
+            onClick={() => setShowWhiteboard(true)}
+            className="p-2 rounded-xl text-brand-500 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-500/20 cursor-pointer transition-colors"
+            title="Shared Whiteboard"
+          >
+            <Palette className="w-5.5 h-5.5" />
+          </button>
+
           {/* Clear Chat Button */}
           {messages.length > 0 && (
             <button
               onClick={clearCurrentMessages}
-              className="p-2 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer"
+              className="p-2 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
               title="Clear channel history"
             >
               <Trash2 className="w-5.5 h-5.5" />
@@ -135,6 +146,14 @@ export default function ChatWindow({ onToggleSidebar }) {
         onTypingStop={sendTypingStop}
         disabled={isDisconnected}
       />
+
+      {/* Shared Whiteboard Modal */}
+      {showWhiteboard && (
+        <WhiteboardModal
+          channel={useChat().channel}
+          onClose={() => setShowWhiteboard(false)}
+        />
+      )}
     </div>
   );
 }
