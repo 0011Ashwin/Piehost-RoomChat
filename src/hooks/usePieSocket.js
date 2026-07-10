@@ -15,7 +15,7 @@ const parseMember = (member) => {
       avatarColor: data.avatarColor || 'from-violet-500 to-purple-600',
       uuid: member.uuid,
     };
-  } catch (_e) {
+  } catch {
     return {
       username: member.user || 'Anonymous',
       avatarColor: 'from-violet-500 to-purple-600',

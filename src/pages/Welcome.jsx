@@ -17,14 +17,15 @@ export default function Welcome() {
   const [isChecking, setIsChecking] = useState(false);
 
   // Helper to check if username already exists in PieSocket presence
-  const checkAvailability = (targetUsername) => {
+  const checkAvailability = (targetUsername, targetColor = selectedColor) => {
     return new Promise((resolve) => {
       const apiKey = import.meta.env.VITE_PIESOCKET_API_KEY || '';
       const clusterId = import.meta.env.VITE_PIESOCKET_CLUSTER_ID || 'demo';
 
-      // Use a random temp user ID to avoid colliding with ourselves during the presence check
-      const tempUserId = JSON.stringify({
-        username: `system_check_${Math.random().toString(36).substring(2, 9)}`,
+      // Connect using the actual target username to see if other connections already exist
+      const checkUserId = JSON.stringify({
+        username: targetUsername,
+        avatarColor: targetColor,
       });
 
       let resolved = false;
@@ -54,7 +55,7 @@ export default function Welcome() {
           clusterId,
           notifySelf: true,
           presence: true,
-          userId: tempUserId,
+          userId: checkUserId,
         });
 
         tempClient.subscribe('general-lounge').then((channel) => {
@@ -65,23 +66,32 @@ export default function Welcome() {
             cleanup();
 
             const membersList = channel.members || [];
-            const duplicate = membersList.find((m) => {
+            
+            // Check if there are other members with the same username.
+            // Since we connected with targetUsername, our current check socket is in the list.
+            // We look for any other member with the same username but a different UUID.
+            const otherMatchingMembers = membersList.filter((m) => {
+              if (m.uuid === channel.uuid) return false;
+
               try {
                 const data = JSON.parse(m.user);
                 return data.username?.toLowerCase() === targetUsername.toLowerCase();
-              } catch (_e) {
+              } catch {
                 // Fallback for plain-text usernames
                 return m.user?.toLowerCase() === targetUsername.toLowerCase();
               }
             });
 
-            if (duplicate) {
-              resolve({ available: false, reason: 'Username is already active in the chatroom.' });
+            if (otherMatchingMembers.length > 0) {
+              resolve({ 
+                available: false, 
+                reason: 'Username is already active in the chatroom. Please choose another username.' 
+              });
             } else {
               resolve({ available: true });
             }
           });
-        }).catch((_err) => {
+        }).catch(() => {
           if (!resolved) {
             resolved = true;
             clearTimeout(timeoutId);
@@ -89,7 +99,7 @@ export default function Welcome() {
             resolve({ available: true }); // Proceed on subscription errors
           }
         });
-      } catch (_err) {
+      } catch {
         if (!resolved) {
           resolved = true;
           clearTimeout(timeoutId);
@@ -111,7 +121,7 @@ export default function Welcome() {
     setIsChecking(true);
     const checkToastId = toast.loading('Verifying identity availability...');
 
-    const res = await checkAvailability(username.trim());
+    const res = await checkAvailability(username.trim(), selectedColor);
 
     toast.dismiss(checkToastId);
     setIsChecking(false);
@@ -136,7 +146,7 @@ export default function Welcome() {
     setIsChecking(true);
     const checkToastId = toast.loading('Verifying session availability...');
 
-    const res = await checkAvailability(profile.username);
+    const res = await checkAvailability(profile.username, profile.avatarColor);
 
     toast.dismiss(checkToastId);
     setIsChecking(false);
