@@ -26,18 +26,32 @@ export default function WhiteboardModal({ channel, onClose }) {
 
     let isActive = true;
 
+    const drawLine = (canvas, ctx, line) => {
+      ctx.beginPath();
+      ctx.moveTo(line.x0 * canvas.width, line.y0 * canvas.height);
+      ctx.lineTo(line.x1 * canvas.width, line.y1 * canvas.height);
+      ctx.strokeStyle = line.color;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.closePath();
+    };
+
     const handleDraw = (data) => {
       if (!isActive) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
-      ctx.beginPath();
-      ctx.moveTo(data.x0 * canvas.width, data.y0 * canvas.height);
-      ctx.lineTo(data.x1 * canvas.width, data.y1 * canvas.height);
-      ctx.strokeStyle = data.color;
-      ctx.lineWidth = 3;
-      ctx.stroke();
-      ctx.closePath();
+      drawLine(canvas, ctx, data);
+    };
+
+    const handleDrawBatch = (data) => {
+      if (!isActive) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      data.lines.forEach((line) => {
+        drawLine(canvas, ctx, line);
+      });
     };
 
     const handleClear = () => {
@@ -49,6 +63,7 @@ export default function WhiteboardModal({ channel, onClose }) {
     };
 
     channel.listen('whiteboard_draw', handleDraw);
+    channel.listen('whiteboard_draw_batch', handleDrawBatch);
     channel.listen('whiteboard_clear', handleClear);
 
     return () => {
@@ -58,6 +73,32 @@ export default function WhiteboardModal({ channel, onClose }) {
 
   // Drawing logic
   const currentPos = useRef({ x: 0, y: 0 });
+  const drawQueue = useRef([]);
+
+  // Batch send draw events to reduce WebSocket message load and latency
+  useEffect(() => {
+    if (!isDrawing || !channel) return;
+
+    const interval = setInterval(() => {
+      if (drawQueue.current.length > 0) {
+        channel.publish('whiteboard_draw_batch', {
+          lines: drawQueue.current
+        });
+        drawQueue.current = [];
+      }
+    }, 25); // 25ms flush interval (40fps updates)
+
+    return () => {
+      clearInterval(interval);
+      // Flush any remaining lines on draw stop
+      if (drawQueue.current.length > 0) {
+        channel.publish('whiteboard_draw_batch', {
+          lines: drawQueue.current
+        });
+        drawQueue.current = [];
+      }
+    };
+  }, [isDrawing, channel]);
 
   const startDrawing = (e) => {
     setIsDrawing(true);
@@ -84,16 +125,14 @@ export default function WhiteboardModal({ channel, onClose }) {
     ctx.stroke();
     ctx.closePath();
 
-    // Broadcast
-    if (channel) {
-      channel.publish('whiteboard_draw', {
-        x0: currentPos.current.x / canvas.width,
-        y0: currentPos.current.y / canvas.height,
-        x1: newX / canvas.width,
-        y1: newY / canvas.height,
-        color
-      });
-    }
+    // Buffer for batch broadcast
+    drawQueue.current.push({
+      x0: currentPos.current.x / canvas.width,
+      y0: currentPos.current.y / canvas.height,
+      x1: newX / canvas.width,
+      y1: newY / canvas.height,
+      color
+    });
 
     currentPos.current = { x: newX, y: newY };
   };
