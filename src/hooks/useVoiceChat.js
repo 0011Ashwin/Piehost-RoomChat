@@ -16,6 +16,7 @@ export function useVoiceChat(channel, profile, activeRoomId) {
   const localStreamRef = useRef(null);
   const pcsRef = useRef({}); // username -> RTCPeerConnection
   const audioElementsRef = useRef({}); // username -> HTMLAudioElement
+  const lastRoomIdRef = useRef(activeRoomId);
 
   const broadcastVoiceState = useCallback((state) => {
     if (!channel || !profile) return;
@@ -67,10 +68,13 @@ export function useVoiceChat(channel, profile, activeRoomId) {
 
   // Reset voice state when room changes
   useEffect(() => {
-    if (inVoice) {
-      leaveVoice();
+    if (lastRoomIdRef.current !== activeRoomId) {
+      lastRoomIdRef.current = activeRoomId;
+      if (inVoice) {
+        leaveVoice();
+      }
+      setVoiceUsers({});
     }
-    setVoiceUsers({});
   }, [activeRoomId, inVoice, leaveVoice]);
 
   // Clean up on unmount
