@@ -6,7 +6,7 @@ import Modal from '../components/Common/Modal';
 import Button from '../components/Common/Button';
 import Avatar from '../components/Common/Avatar';
 import { AVATAR_COLORS } from '../utils/constants';
-import { Sun, Moon, Laptop, User, LogOut, Settings } from 'lucide-react';
+import { Sun, Moon, Laptop, User, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ChatRoom() {

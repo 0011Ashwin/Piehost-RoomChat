@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { usePieSocket } from '../hooks/usePieSocket';
@@ -172,11 +173,7 @@ export function ChatProvider({ children }) {
     });
   }, [activeRoomId, setRoomMessages]);
 
-  // Check last room unread count (stub feature for extra credit)
-  const getRoomUnreadCount = useCallback((roomId) => {
-    // Return mock unread count or implement custom tracking if needed
-    return 0; 
-  }, []);
+  // Removed unused getRoomUnreadCount
 
   const value = {
     profile,

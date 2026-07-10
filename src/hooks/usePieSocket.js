@@ -16,7 +16,7 @@ const parseMember = (member) => {
       avatarColor: 'from-violet-500 to-purple-600',
       uuid: member.uuid,
     };
-  } catch (e) {
+  } catch (_e) {
     return {
       username: member.user || 'Anonymous',
       email: '',
@@ -173,7 +173,7 @@ export function usePieSocket(roomId, profile, options = {}) {
         });
 
         /* ── Reaction events ─────────────────────────────────────── */
-        channel.listen('message_reaction', (data, meta) => {
+        channel.listen('message_reaction', (data, _meta) => {
           if (onReactionRef.current) {
             onReactionRef.current(data);
           }

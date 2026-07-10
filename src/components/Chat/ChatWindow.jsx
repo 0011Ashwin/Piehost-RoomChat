@@ -21,6 +21,7 @@ export default function ChatWindow({ onToggleSidebar }) {
     typingUsers,
     connectionStatus,
     profile,
+    channel,
   } = useChat();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -150,7 +151,7 @@ export default function ChatWindow({ onToggleSidebar }) {
       {/* Shared Whiteboard Modal */}
       {showWhiteboard && (
         <WhiteboardModal
-          channel={useChat().channel}
+          channel={channel}
           onClose={() => setShowWhiteboard(false)}
         />
       )}

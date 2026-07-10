@@ -3,7 +3,7 @@ import { useChat } from '../context/ChatContext';
 import { AVATAR_COLORS } from '../utils/constants';
 import Button from '../components/Common/Button';
 import Avatar from '../components/Common/Avatar';
-import { Radio, ArrowRight, UserCheck, UserPlus, Mail, User } from 'lucide-react';
+import { Radio, ArrowRight, UserCheck, Mail, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PieSocket from 'piesocket-js';
 
@@ -73,7 +73,7 @@ export default function Welcome() {
                 const matchUser = data.username?.toLowerCase() === targetUsername.toLowerCase();
                 const matchEmail = data.email?.toLowerCase() === targetEmail.toLowerCase();
                 return matchUser || matchEmail;
-              } catch (e) {
+              } catch (_e) {
                 // Fallback for plain-text usernames
                 return m.user?.toLowerCase() === targetUsername.toLowerCase();
               }
@@ -87,14 +87,14 @@ export default function Welcome() {
                 } else {
                   resolve({ available: false, reason: 'Email address is already active in the chatroom.' });
                 }
-              } catch (e) {
+              } catch (_e) {
                 resolve({ available: false, reason: 'Username is already active in the chatroom.' });
               }
             } else {
               resolve({ available: true });
             }
           });
-        }).catch((err) => {
+        }).catch((_err) => {
           if (!resolved) {
             resolved = true;
             clearTimeout(timeoutId);
@@ -102,7 +102,7 @@ export default function Welcome() {
             resolve({ available: true }); // Proceed on subscription errors
           }
         });
-      } catch (err) {
+      } catch (_err) {
         if (!resolved) {
           resolved = true;
           clearTimeout(timeoutId);

@@ -3,7 +3,7 @@ import { useChat } from '../../context/ChatContext';
 import ChannelList from './ChannelList';
 import OnlineUsers from './OnlineUsers';
 import Avatar from '../Common/Avatar';
-import { Settings, MessageSquare, ShieldAlert, Radio } from 'lucide-react';
+import { Settings, Radio } from 'lucide-react';
 
 /**
  * Sidebar container component.
