@@ -4,7 +4,7 @@ import MessageList from './MessageList';
 import TypingIndicator from './TypingIndicator';
 import ChatInput from './ChatInput';
 import WhiteboardModal from './WhiteboardModal';
-import { Menu, Search, X, Trash2, Hash, Palette } from 'lucide-react';
+import { Menu, Search, X, Trash2, Hash, Palette, Phone, PhoneOff, Mic, MicOff } from 'lucide-react';
 
 /**
  * Chat window container.
@@ -22,6 +22,12 @@ export default function ChatWindow({ onToggleSidebar }) {
     connectionStatus,
     profile,
     channel,
+    inVoice,
+    isMuted,
+    voiceUsers,
+    joinVoice,
+    leaveVoice,
+    toggleMute,
   } = useChat();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,6 +106,42 @@ export default function ChatWindow({ onToggleSidebar }) {
           >
             {showSearch ? <X className="w-5.5 h-5.5" /> : <Search className="w-5.5 h-5.5" />}
           </button>
+
+          {/* Voice Chat Controls */}
+          <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 mx-1.5 shadow-sm">
+            <button
+              onClick={inVoice ? leaveVoice : joinVoice}
+              className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors ${
+                inVoice
+                  ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-sm shadow-rose-500/25 animate-pulse'
+                  : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm shadow-emerald-500/25'
+              }`}
+              title={inVoice ? "Leave voice channel" : "Join voice channel"}
+            >
+              {inVoice ? <PhoneOff className="w-3.5 h-3.5" /> : <Phone className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">{inVoice ? 'Leave' : 'Join Voice'}</span>
+            </button>
+
+            {inVoice && (
+              <button
+                onClick={toggleMute}
+                className={`p-1.5 rounded-lg cursor-pointer transition-all ${
+                  isMuted
+                    ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/25'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+                title={isMuted ? "Unmute microphone" : "Mute microphone"}
+              >
+                {isMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+              </button>
+            )}
+            
+            {(inVoice || Object.keys(voiceUsers).length > 0) && (
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 px-2 py-1 select-none flex items-center gap-1">
+                🎙️ {Object.keys(voiceUsers).length + (inVoice ? 1 : 0)}
+              </span>
+            )}
+          </div>
 
           {/* Whiteboard Toggle */}
           <button

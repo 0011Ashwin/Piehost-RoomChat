@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { usePieSocket } from '../hooks/usePieSocket';
+import { useVoiceChat } from '../hooks/useVoiceChat';
 import { DEFAULT_ROOMS, LOCAL_STORAGE_KEYS } from '../utils/constants';
 import { generateId } from '../utils/helpers';
 import toast from 'react-hot-toast';
@@ -106,6 +107,16 @@ export function ChatProvider({ children }) {
     }
   );
 
+  // Initialize Voice Chat
+  const {
+    inVoice,
+    isMuted,
+    voiceUsers,
+    joinVoice,
+    leaveVoice,
+    toggleMute,
+  } = useVoiceChat(channel, profile, activeRoomId);
+
   // Send message action
   const sendMessage = useCallback((text) => {
     if (!profile) return;
@@ -193,6 +204,12 @@ export function ChatProvider({ children }) {
     connectionStatus,
     rooms: DEFAULT_ROOMS,
     channel,
+    inVoice,
+    isMuted,
+    voiceUsers,
+    joinVoice,
+    leaveVoice,
+    toggleMute,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

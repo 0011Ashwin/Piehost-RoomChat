@@ -1,5 +1,7 @@
 import React from 'react';
 import Avatar from '../Common/Avatar';
+import { useChat } from '../../context/ChatContext';
+import { Mic, MicOff } from 'lucide-react';
 
 /**
  * Renders the list of currently online channel members in the sidebar.
@@ -7,6 +9,7 @@ import Avatar from '../Common/Avatar';
  * @param {object} currentUser - The local user profile
  */
 export default function OnlineUsers({ users = [], currentUser }) {
+  const { voiceUsers, inVoice, isMuted } = useChat();
   // Deduplicate users by username to handle multiple connections/stale tabs
   const uniqueUsersMap = new Map();
   users.forEach((user) => {
@@ -58,11 +61,24 @@ export default function OnlineUsers({ users = [], currentUser }) {
                   isOnline={true}
                   showIndicator={true}
                 />
-                <span className="truncate flex-1 font-medium">
-                  {user.username}
-                  {isMe && (
-                    <span className="text-[10px] ml-1.5 font-normal text-slate-400 dark:text-slate-500">
-                      (you)
+                <span className="truncate flex-1 font-medium flex items-center justify-between">
+                  <span>
+                    {user.username}
+                    {isMe && (
+                      <span className="text-[10px] ml-1.5 font-normal text-slate-400 dark:text-slate-500">
+                        (you)
+                      </span>
+                    )}
+                  </span>
+                  
+                  {/* Voice state indicators */}
+                  {((isMe && inVoice) || (!isMe && voiceUsers[user.username])) && (
+                    <span className="ml-2 shrink-0">
+                      {((isMe && isMuted) || (!isMe && voiceUsers[user.username]?.isMuted)) ? (
+                        <MicOff className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+                      ) : (
+                        <Mic className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
+                      )}
                     </span>
                   )}
                 </span>
