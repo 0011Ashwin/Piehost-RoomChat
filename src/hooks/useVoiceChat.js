@@ -55,6 +55,16 @@ export function useVoiceChat(channel, profile, activeRoomId) {
     toast.success('Left voice chat.', { id: 'voice-toast' });
   }, [cleanupAllConnections, broadcastVoiceState]);
 
+  const sendSignal = useCallback((to, signalData) => {
+    if (!channel || !profile) return;
+    channel.publish('voice_signal', {
+      to,
+      from: profile.username,
+      roomId: activeRoomId,
+      ...signalData,
+    });
+  }, [channel, profile, activeRoomId]);
+
   // Reset voice state when room changes
   useEffect(() => {
     if (inVoice) {
@@ -130,16 +140,6 @@ export function useVoiceChat(channel, profile, activeRoomId) {
 
     return pc;
   }, [sendSignal]);
-
-  const sendSignal = useCallback((to, signalData) => {
-    if (!channel || !profile) return;
-    channel.publish('voice_signal', {
-      to,
-      from: profile.username,
-      roomId: activeRoomId,
-      ...signalData,
-    });
-  }, [channel, profile, activeRoomId]);
 
   // Handle incoming signals
   const handleIncomingSignal = useCallback(async (data) => {
