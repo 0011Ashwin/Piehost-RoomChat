@@ -22,10 +22,11 @@ export default function Welcome() {
       const apiKey = import.meta.env.VITE_PIESOCKET_API_KEY || '';
       const clusterId = import.meta.env.VITE_PIESOCKET_CLUSTER_ID || 'demo';
 
-      // Connect using the actual target username to see if other connections already exist
+      // Connect using a temporary, unique validator identity to avoid collisions
       const checkUserId = JSON.stringify({
-        username: targetUsername,
-        avatarColor: targetColor,
+        username: `System-Validator-${Math.random().toString(36).substring(2, 8)}`,
+        avatarColor: '',
+        isSystem: true,
       });
 
       let resolved = false;
@@ -68,13 +69,10 @@ export default function Welcome() {
             const membersList = channel.members || [];
             
             // Check if there are other members with the same username.
-            // Since we connected with targetUsername, our current check socket is in the list.
-            // We look for any other member with the same username but a different UUID.
             const otherMatchingMembers = membersList.filter((m) => {
-              if (m.uuid === channel.uuid) return false;
-
               try {
                 const data = JSON.parse(m.user);
+                if (data.isSystem) return false;
                 return data.username?.toLowerCase() === targetUsername.toLowerCase();
               } catch {
                 // Fallback for plain-text usernames

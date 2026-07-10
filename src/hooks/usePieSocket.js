@@ -13,12 +13,14 @@ const parseMember = (member) => {
     return {
       username: data.username || 'Anonymous',
       avatarColor: data.avatarColor || 'from-violet-500 to-purple-600',
+      isSystem: !!data.isSystem,
       uuid: member.uuid,
     };
   } catch {
     return {
       username: member.user || 'Anonymous',
       avatarColor: 'from-violet-500 to-purple-600',
+      isSystem: false,
       uuid: member.uuid,
     };
   }
@@ -121,7 +123,7 @@ export function usePieSocket(roomId, profile, options = {}) {
         /* ── Presence: sync member list ──────────────────────────── */
         const syncMembers = () => {
           if (!channel.members) return;
-          const decoded = channel.members.map(parseMember);
+          const decoded = channel.members.map(parseMember).filter((m) => !m.isSystem);
           setOnlineMembers(decoded);
         };
 
@@ -131,6 +133,7 @@ export function usePieSocket(roomId, profile, options = {}) {
           syncMembers();
           if (data.member && data.member.uuid !== channel.uuid) {
             const m = parseMember(data.member);
+            if (m.isSystem) return;
             toast.success(`${m.username} joined`, {
               duration: 2000,
               icon: '👋',
@@ -144,6 +147,7 @@ export function usePieSocket(roomId, profile, options = {}) {
           if (data.member) {
             removeTypingUser(data.member.uuid);
             const m = parseMember(data.member);
+            if (m.isSystem) return;
             toast(`${m.username} left`, {
               duration: 2000,
               icon: '🚪',
