@@ -5,21 +5,19 @@ import toast from 'react-hot-toast';
 
 /**
  * Parses a raw PieSocket member object into a usable { username, avatarColor, uuid }.
- * The `user` field corresponds to the userId (serialized JSON containing username & email).
+ * The `user` field corresponds to the userId (serialized JSON containing username & avatarColor).
  */
 const parseMember = (member) => {
   try {
     const data = JSON.parse(member.user);
     return {
       username: data.username || 'Anonymous',
-      email: data.email || '',
-      avatarColor: 'from-violet-500 to-purple-600',
+      avatarColor: data.avatarColor || 'from-violet-500 to-purple-600',
       uuid: member.uuid,
     };
   } catch (_e) {
     return {
       username: member.user || 'Anonymous',
-      email: '',
       avatarColor: 'from-violet-500 to-purple-600',
       uuid: member.uuid,
     };
@@ -96,8 +94,8 @@ export function usePieSocket(roomId, profile, options = {}) {
     let isSubscribed = true;
     setConnectionStatus('reconnecting');
 
-    // Init SDK with username and email
-    pieSocketService.init(profile.username, profile.email || '');
+    // Init SDK with username and avatarColor
+    pieSocketService.init(profile.username, profile.avatarColor || '');
 
     // Subscribe to plain room name: e.g. "general-lounge"
     pieSocketService
@@ -217,7 +215,7 @@ export function usePieSocket(roomId, profile, options = {}) {
       setOnlineMembers([]);
       setTypingUsers({});
     };
-  }, [roomId, profile?.username, profile?.email, removeTypingUser]);
+  }, [roomId, profile?.username, profile?.avatarColor, removeTypingUser]);
 
 
 

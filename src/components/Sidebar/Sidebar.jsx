@@ -98,9 +98,6 @@ export default function Sidebar({ onOpenSettings, onCloseDrawer }) {
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
                   {profile.username}
                 </p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 truncate">
-                  {profile.email}
-                </p>
               </div>
             </div>
             

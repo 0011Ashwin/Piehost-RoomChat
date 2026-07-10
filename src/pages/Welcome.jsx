@@ -3,7 +3,7 @@ import { useChat } from '../context/ChatContext';
 import { AVATAR_COLORS } from '../utils/constants';
 import Button from '../components/Common/Button';
 import Avatar from '../components/Common/Avatar';
-import { Radio, ArrowRight, UserCheck, Mail, User } from 'lucide-react';
+import { Radio, ArrowRight, UserCheck, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PieSocket from 'piesocket-js';
 
@@ -12,13 +12,12 @@ export default function Welcome() {
 
   // Form states
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
   const [selectedColor, setSelectedColor] = useState(AVATAR_COLORS[0].value);
   const [isNewAccount, setIsNewAccount] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
-  // Helper to check if username/email already exists in PieSocket presence
-  const checkAvailability = (targetUsername, targetEmail) => {
+  // Helper to check if username already exists in PieSocket presence
+  const checkAvailability = (targetUsername) => {
     return new Promise((resolve) => {
       const apiKey = import.meta.env.VITE_PIESOCKET_API_KEY || '';
       const clusterId = import.meta.env.VITE_PIESOCKET_CLUSTER_ID || 'demo';
@@ -26,7 +25,6 @@ export default function Welcome() {
       // Use a random temp user ID to avoid colliding with ourselves during the presence check
       const tempUserId = JSON.stringify({
         username: `system_check_${Math.random().toString(36).substring(2, 9)}`,
-        email: `system_check_${Math.random().toString(36).substring(2, 9)}@check.com`
       });
 
       let resolved = false;
@@ -70,9 +68,7 @@ export default function Welcome() {
             const duplicate = membersList.find((m) => {
               try {
                 const data = JSON.parse(m.user);
-                const matchUser = data.username?.toLowerCase() === targetUsername.toLowerCase();
-                const matchEmail = data.email?.toLowerCase() === targetEmail.toLowerCase();
-                return matchUser || matchEmail;
+                return data.username?.toLowerCase() === targetUsername.toLowerCase();
               } catch (_e) {
                 // Fallback for plain-text usernames
                 return m.user?.toLowerCase() === targetUsername.toLowerCase();
@@ -80,16 +76,7 @@ export default function Welcome() {
             });
 
             if (duplicate) {
-              try {
-                const data = JSON.parse(duplicate.user);
-                if (data.username?.toLowerCase() === targetUsername.toLowerCase()) {
-                  resolve({ available: false, reason: 'Username is already active in the chatroom.' });
-                } else {
-                  resolve({ available: false, reason: 'Email address is already active in the chatroom.' });
-                }
-              } catch (_e) {
-                resolve({ available: false, reason: 'Username is already active in the chatroom.' });
-              }
+              resolve({ available: false, reason: 'Username is already active in the chatroom.' });
             } else {
               resolve({ available: true });
             }
@@ -120,22 +107,11 @@ export default function Welcome() {
       toast.error('Please enter a username');
       return;
     }
-    if (!email.trim()) {
-      toast.error('Please enter your email');
-      return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
 
     setIsChecking(true);
     const checkToastId = toast.loading('Verifying identity availability...');
 
-    const res = await checkAvailability(username.trim(), email.trim());
+    const res = await checkAvailability(username.trim());
 
     toast.dismiss(checkToastId);
     setIsChecking(false);
@@ -147,7 +123,6 @@ export default function Welcome() {
 
     const newProfile = {
       username: username.trim(),
-      email: email.trim(),
       avatarColor: selectedColor,
     };
 
@@ -161,7 +136,7 @@ export default function Welcome() {
     setIsChecking(true);
     const checkToastId = toast.loading('Verifying session availability...');
 
-    const res = await checkAvailability(profile.username, profile.email);
+    const res = await checkAvailability(profile.username);
 
     toast.dismiss(checkToastId);
     setIsChecking(false);
@@ -211,9 +186,6 @@ export default function Welcome() {
               <h2 className="font-display font-bold text-xl text-slate-800 dark:text-slate-100">
                 {profile.username}
               </h2>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                {profile.email}
-              </p>
             </div>
           </div>
 
@@ -291,25 +263,6 @@ export default function Welcome() {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="e.g. Ashwin"
                 maxLength={20}
-                required
-                disabled={isChecking}
-                className="bg-transparent text-sm outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 w-full disabled:opacity-50"
-              />
-            </div>
-          </div>
-
-          {/* Email Input */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 font-display">
-              Email Address
-            </label>
-            <div className="relative flex items-center bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-xl px-3.5 py-2.5 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/10 transition-all">
-              <Mail className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="ashwin@example.com"
                 required
                 disabled={isChecking}
                 className="bg-transparent text-sm outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 w-full disabled:opacity-50"

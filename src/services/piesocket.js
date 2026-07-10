@@ -6,12 +6,12 @@ class PieSocketService {
   }
 
   /**
-   * Initializes the PieSocket client with the user's profile.
-   * @param {string} username - User's name
-   * @param {string} email - User's email
+   * Initializes the PieSocket instance.
+   * @param {string} username - User's display name
+   * @param {string} avatarColor - User's avatar theme
    * @returns {PieSocket}
    */
-  init(username, email = '') {
+  init(username, avatarColor = '') {
     const apiKey = import.meta.env.VITE_PIESOCKET_API_KEY || '';
     const clusterId = import.meta.env.VITE_PIESOCKET_CLUSTER_ID || 'demo';
 
@@ -23,13 +23,14 @@ class PieSocketService {
       });
     }
 
-    // Pass serialized username and email as the userId
+    // Pass serialized username and avatarColor as the userId
+    // so other presence members can easily identify this user.
     this.client = new PieSocket({
       apiKey,
       clusterId,
       notifySelf: true,
       presence: true,
-      userId: JSON.stringify({ username, email }),
+      userId: JSON.stringify({ username, avatarColor }),
     });
 
     return this.client;
